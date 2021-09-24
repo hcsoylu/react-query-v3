@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import "./App.css";
 
 const fetchUsers = async () => {
@@ -33,14 +33,13 @@ const addUser = async (user) => {
 };
 
 function App() {
+  // call the useQueryClient hook
+
+  const queryClient = useQueryClient();
+
   //grab all users
 
-  const {
-    data: users,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery("users", fetchUsers);
+  const { data: users, isLoading, error } = useQuery("users", fetchUsers);
 
   //create a mutation
 
@@ -52,14 +51,17 @@ function App() {
   } = useMutation(addUser);
 
   const handleAddUser = async () => {
-    const data = await mutateAsync({
+    const newUser = await mutateAsync({
       first_name: "huseyin",
       last_name: "soylu",
     });
 
     console.log("this was an async mutation");
-    console.log(data);
-    refetch();
+    console.log(newUser);
+    queryClient.setQueryData("users", (oldData) => ({
+      ...oldData,
+      data: [newUser, ...oldData.data],
+    }));
   };
 
   if (isLoading) {
